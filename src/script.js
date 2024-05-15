@@ -68,6 +68,13 @@ const loadingManager = new THREE.LoadingManager(
             percentage.classList.add('ended')
             loadingBarElement.style.transform = ''
             percentage.style.transform = ''
+
+            window.setTimeout(() =>
+            {
+                loadingBarBackground.remove();
+                loadingBarElement.remove();
+                percentage.remove();
+            }, 5000);
         }, 500);
         window.setTimeout(() =>
         {

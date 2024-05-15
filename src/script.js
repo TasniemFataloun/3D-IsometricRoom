@@ -17,6 +17,32 @@ import smokeFragmentShader from './shaders/smoke/fragment.glsl'
 import overlayFragmentShader from './shaders/overlay/fragment.glsl'
 import overlayVertexShader from './shaders/overlay/vertex.glsl'
 
+
+
+/**
+ * Audio
+ */
+
+const audio = new Audio();
+audio.src = './lobby_music.mp3';
+audio.loop = true;
+audio.volume = 0.1;
+let interacted = false;
+
+
+function firstClickHandler() {
+    if (!interacted) {
+        interacted = true;
+        audio.play();
+        // Remove the event listener after the first click
+        window.removeEventListener('mousedown', firstClickHandler);
+    }
+}
+
+window.addEventListener('mousedown', firstClickHandler);
+
+
+
 /**
  * Base
  */

@@ -130,3 +130,14 @@ body
     opacity: 0;
     transition: opacity 3.5s ease-in-out;
 }
+
+.author{
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    color: white;
+    font-family: monospace;
+    font-size: 0.8rem;
+    pointer-events: none;
+    z-index: 2;
+}

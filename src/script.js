@@ -384,6 +384,7 @@ gltfLoader.load(
     'models/room_part_2.glb',
     (gltf) =>
     {
+        console.log(gltf)
         mixerPoro = new THREE.AnimationMixer(gltf.scene);
         const action = mixerPoro.clipAction(gltf.animations[0])
         action.play();

@@ -1,5 +1,6 @@
 import GUI from 'lil-gui'
 import * as THREE from 'three'
+import { gsap } from 'gsap'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
@@ -13,6 +14,7 @@ import waterVertexShader from './shaders/water/vertex.glsl'
 import waterFragmentShader from './shaders/water/fragment.glsl'
 import smokeVertexShader from './shaders/smoke/vertex.glsl'
 import smokeFragmentShader from './shaders/smoke/fragment.glsl'
+
 
 /**
  * Base
@@ -48,18 +50,33 @@ emissionTweaks.close();
 
 const debugObject = {};
 
+const loadingBarElement = document.querySelector('.loading-bar')
+const percentage = document.querySelector('.percentage')
 let sceneReady = false
 const loadingManager = new THREE.LoadingManager(
     // Loaded
     () =>
     {
         // ...
-
+        window.setTimeout(() =>
+        {
+            gsap.to(overlayMaterial.uniforms.uAlpha, { duration: 3, value: 0, delay: 1 })
+            loadingBarElement.classList.add('ended')
+            percentage.classList.add('ended')
+            loadingBarElement.style.transform = ''
+            percentage.style.transform = ''
+        }, 500);
         window.setTimeout(() =>
         {
             sceneReady = true
-        }, 2000)
+        }, 3500)
     },
+    (itemUrl, itemsLoaded, itemsTotal) =>
+        {
+            const progressRatio = itemsLoaded / itemsTotal
+            loadingBarElement.style.transform = `scaleX(${progressRatio})`
+            percentage.innerText = (progressRatio * 100).toFixed(0) + ' %'
+        }
 
     // ...
 )
@@ -84,6 +101,35 @@ dracoLoader.setDecoderPath('draco/')
 // GLTF loader
 const gltfLoader = new GLTFLoader(loadingManager)
 gltfLoader.setDRACOLoader(dracoLoader)
+
+
+/**
+ * Overlay
+ */
+const overlayGeometry = new THREE.PlaneGeometry(2, 2, 1, 1)
+const overlayMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+        uAlpha: {value: 1}
+    },
+    transparent: true,
+    vertexShader: `
+        void main()
+        {
+            gl_Position = vec4(position, 1.0);
+        }
+    `,
+    fragmentShader: `
+    uniform float uAlpha;
+
+    void main()
+    {
+        gl_FragColor = vec4(0.0, 0.0, 0.0, uAlpha);
+    }
+`
+})
+const overlay = new THREE.Mesh(overlayGeometry, overlayMaterial)
+scene.add(overlay)
+
 
 /**
  * Object

@@ -84,6 +84,26 @@ const bakedTexture1 = textureLoader.load("/textures/baked8.jpg"); //8
 bakedTexture1.flipY = false;
 bakedTexture1.colorSpace = THREE.SRGBColorSpace;
 
+const globeTexture = textureLoader.load("/textures/sunTexture2.png");
+const saturnTexture = textureLoader.load("/textures/Saturn.jpeg");
+
+//emissions
+const halfmoonMaterial = new THREE.MeshBasicMaterial({
+  color: 0xffffff,
+});
+
+const lampMaterial = new THREE.MeshBasicMaterial({
+  color: 0xff9d53,
+});
+
+const ledlightoffMaterial = new THREE.MeshBasicMaterial({
+  color: 0xa8aab1,
+});
+
+const windowtopEmission = new THREE.MeshBasicMaterial({
+  color: 0x94969c,
+});
+
 /**
  * Materials
  */
@@ -97,13 +117,39 @@ const material1 = new THREE.MeshBasicMaterial({
 gltfLoader.load("/models/bedroom7.glb", (gltf) => {
   //7
   gltf.scene.traverse((child) => {
-    console.log(gltf.scene);
+    console.log(child);
     if (child.isMesh) {
       child.material = material1;
     }
+
+    if (child.isMesh && child.name === "mars") {
+      child.material = new THREE.MeshBasicMaterial({
+        map: globeTexture,
+      });
+    }
+
+    if (child.isMesh && child.name === "moon") {
+      child.material = new THREE.MeshBasicMaterial({
+        map: saturnTexture,
+      });
+    }
+
+    if (child.isMesh && child.name === "halfmoon") {
+      child.material = halfmoonMaterial;
+    }
+
+    if (child.isMesh && child.name === "lightTop002") {
+      child.material = ledlightoffMaterial;
+    }
+
+    if (child.isMesh && child.name === "windowtop.002") {
+      child.material = windowtopEmission;
+    }
   });
 
-  scene.add(gltf.scene);
+  gltf.scene.children.find((child) => {});
+
+  scene.add(gltf.scene); // Add a closing parenthesis here
 });
 
 /**

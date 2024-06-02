@@ -4,6 +4,7 @@ import { gsap } from "gsap";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
+import { color, log } from "three/examples/jsm/nodes/Nodes.js";
 
 /**
  * Base
@@ -16,7 +17,7 @@ const gui = new GUI({
 gui.close();
 gui.hide();
 
-if ((window, location.hash === "#debug")) {
+if (window.location.hash === "#debug") {
   gui.show();
 }
 
@@ -53,8 +54,6 @@ const loadingManager = new THREE.LoadingManager(
     loadingBarElement.style.transform = `scaleX(${progressRatio})`;
     percentage.innerText = (progressRatio * 100).toFixed(0) + " %";
   }
-
-  // ...
 );
 
 // Canvas
@@ -80,16 +79,49 @@ gltfLoader.setDRACOLoader(dracoLoader);
 /**
  * Textures
  */
-const bakedTexture1 = textureLoader.load("/textures/baked8.jpg"); //8
+const bakedTexture1 = textureLoader.load("/textures/baked11.jpg");
 bakedTexture1.flipY = false;
 bakedTexture1.colorSpace = THREE.SRGBColorSpace;
 
 const globeTexture = textureLoader.load("/textures/sunTexture2.png");
 const saturnTexture = textureLoader.load("/textures/Saturn.jpeg");
+const video = document.createElement("video");
 
-//emissions
+video.src = "/textures/video3.mp4";
+video.crossOrigin = "anonymous";
+video.loop = true;
+video.muted = true;
+video.play();
+
+const screen = new THREE.VideoTexture(video);
+screen.minFilter = THREE.LinearFilter;
+screen.magFilter = THREE.LinearFilter;
+screen.format = THREE.RGBFormat;
+
+// Rotate the video texture by 90 degrees (PI/2 radians)
+// The setUvTransform method can be used to adjust the UV transformation
+// Here we scale the U and V axes by 1 (no scaling), and then rotate by 90 degrees
+screen.center.set(0.5, 0.5); // Set the rotation center to the middle of the texture
+//size of the video
+screen.rotation = Math.PI /-2 // Rotate 90 degrees
+
+//move to the left
+screen.offset.set(0.1, 0.1);
+//move to the bottom
+screen.repeat.set(0.6, 0.6);
+
+//move to the right
+
+// Apply the video texture to the screen material
+const screenMaterial = new THREE.MeshBasicMaterial({
+  map: screen,
+});
+// Emissions
 const halfmoonMaterial = new THREE.MeshBasicMaterial({
   color: 0xffffff,
+  roughness: 0.5,
+  emissive: 0xffffff,
+  emissiveIntensity: 10, // Adjust the intensity as needed
 });
 
 const lampMaterial = new THREE.MeshBasicMaterial({
@@ -98,30 +130,50 @@ const lampMaterial = new THREE.MeshBasicMaterial({
 
 const ledlightoffMaterial = new THREE.MeshBasicMaterial({
   color: 0xa8aab1,
+  emissive: 0xa8aab1,
+  emissiveIntensity: 0.5, // Adjust the intensity as needed
+  toneMapped: false,
 });
 
-const windowtopEmission = new THREE.MeshBasicMaterial({
-  color: 0x94969c,
+const ledlightEmission = new THREE.MeshBasicMaterial({
+  color: 0x1f51ff,
+  emissive: 0x1f51ff,
+  emissiveIntensity: 20, // Adjust the intensity as needed
+  toneMapped: false,
+});
+
+const circle = new THREE.MeshBasicMaterial({
+  emissive: 0x7041e7,
+  color: 0x7041e7,
+  emissiveIntensity: 40, // Adjust the intensity as needed
+});
+
+const windowTardis = new THREE.MeshStandardMaterial({
+  color: 0x94969c, // Adjust the color as needed
+  roughness: 0.75, // Adjust roughness property
+  // You can add more properties like emissive if needed
 });
 
 /**
  * Materials
  */
 
-//Baked Material
-
+// Baked Material
 const material1 = new THREE.MeshBasicMaterial({
   map: bakedTexture1,
 });
 
-gltfLoader.load("/models/bedroom7.glb", (gltf) => {
-  //7
+gltfLoader.load("/models/bedroom22.glb", (gltf) => {
+  // Traverse the scene
   gltf.scene.traverse((child) => {
     console.log(child);
+
+    // Apply material1 to all meshes
     if (child.isMesh) {
       child.material = material1;
     }
 
+    // Apply specific materials to specific meshes
     if (child.isMesh && child.name === "mars") {
       child.material = new THREE.MeshBasicMaterial({
         map: globeTexture,
@@ -134,22 +186,63 @@ gltfLoader.load("/models/bedroom7.glb", (gltf) => {
       });
     }
 
+    if (child.isMesh && child.name === "screen") {
+      child.material = screenMaterial;
+    }
+
     if (child.isMesh && child.name === "halfmoon") {
       child.material = halfmoonMaterial;
+    }
+
+    console.log(child.name);
+
+    if (child.isMesh && child.name === "ledLightLeft") {
+      child.material = ledlightEmission;
+    }
+
+    if (child.isMesh && child.name === "ledLightLeft001") {
+      child.material = ledlightEmission;
     }
 
     if (child.isMesh && child.name === "lightTop002") {
       child.material = ledlightoffMaterial;
     }
+    if (child.isGroup && child.name === "tardiswindows") {
+      console.log("Found tardiswindows Group!"); // Log if "tardiswindows" Group is found
+      // Traverse the children of the "tardiswindows" Group
+      child.traverse((meshChild) => {
+        if (meshChild.isMesh) {
+          meshChild.material = windowTardis;
+        }
+      });
+    }
 
-    if (child.isMesh && child.name === "windowtop.002") {
-      child.material = windowtopEmission;
+    if (child.isMesh && child.name === "cirlcleBuiten_002") {
+      child.material = circle;
+    }
+
+    if (child.isMesh && child.name === "cirlcleBuiten_001") {
+      child.material = circle;
+    }
+
+    if (child.isMesh && child.name === "Cylinder026") {
+      child.material = lampMaterial;
+    }
+
+    // Animation from blender the model is Cube008
+    const model = gltf.scene;
+
+    const animations = gltf.animations;
+
+    if (animations && animations.length > 0) {
+      const mixer = new THREE.AnimationMixer(model);
+      animations.forEach((clip) => {
+        console.log("clippppsssnn", clip);
+        mixer.clipAction(clip).play();
+      });
     }
   });
-
-  gltf.scene.children.find((child) => {});
-
-  scene.add(gltf.scene); // Add a closing parenthesis here
+  scene.add(gltf.scene);
 });
 
 /**
@@ -244,6 +337,12 @@ const raycaster = new THREE.Raycaster();
 const clock = new THREE.Clock();
 const tick = () => {
   const elapsedTime = clock.getElapsedTime();
+
+  //animation moon
+  const moon = scene.getObjectByName("moon");
+  if (moon) {
+    moon.rotation.y = elapsedTime * 0.3;
+  }
 
   // Update controls
   controls.update();

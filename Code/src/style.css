@@ -1,143 +1,140 @@
-*
-{
-    margin: 0;
-    padding: 0;
+* {
+  margin: 0;
+  padding: 0;
 }
 
 html,
-body
-{
-    overflow: hidden;
+body {
+  overflow: hidden;
 }
 
-.webgl
-{
-    position: fixed;
-    top: 0;
-    left: 0;
-    outline: none;
+.webgl {
+  position: fixed;
+  top: 0;
+  left: 0;
+  outline: none;
 }
 
-.point
-{
-    position: absolute;
-    top: 50%;
-    left: 50%;
+.point {
+  position: absolute;
+  top: 50%;
+  left: 50%;
 }
 
-
-.point .label
-{
-    position: absolute;
-    top: -15px;
-    left: -15px;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: #00000077;
-    border: 1px solid #ffffff77;
-    color: #ffffff;
-    font-family: Helvetica, Arial, sans-serif;
-    text-align: center;
-    line-height: 30px;
-    font-weight: 100;
-    font-size: 14px;
-    cursor:help;
-    transform: scale(0, 0);
-    transition: transform 0.3s;
+.point .label {
+  position: absolute;
+  top: -15px;
+  left: -15px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #00000077;
+  border: 1px solid #ffffff77;
+  color: #ffffff;
+  font-family: Helvetica, Arial, sans-serif;
+  text-align: center;
+  line-height: 30px;
+  font-weight: 100;
+  font-size: 14px;
+  cursor: help;
+  transform: scale(0, 0);
+  transition: transform 0.3s;
 }
 
-.point .text
-{
-    position: absolute;
-    top: 30px;
-    left: -120px;
+.point .text {
+  position: absolute;
+  top: 30px;
+  left: -120px;
+  width: 200px;
+  padding: 20px;
+  border-radius: 4px;
+  background: #00000077;
+  border: 1px solid #ffffff77;
+  color: #ffffff;
+  line-height: 1.3em;
+  font-family: Helvetica, Arial, sans-serif;
+  font-weight: 100;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.point:hover .text {
+  opacity: 1;
+}
+
+.point.visible .label {
+  transform: scale(1, 1);
+}
+
+.loading-bar {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  height: 2px;
+  background: #ffffff;
+  transform: scaleX(0);
+  transform-origin: top left;
+  transition: transform 0.5s;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.loading-bar.ended {
+  transform: scaleX(0);
+  transform-origin: 100% 0;
+  transition: transform 1s ease-in-out;
+}
+
+.percentage {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  font-family: Arial, Helvetica, sans-serif;
+  top: 47%;
+  width: 100%;
+  height: 2px;
+  color: white;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.percentage.ended {
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.loading-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000000;
+  pointer-events: none;
+}
+
+.loading-background.ended {
+  opacity: 0;
+  transition: opacity 3.5s ease-in-out;
+}
+
+.author {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  color: white;
+  font-family: monospace;
+  font-size: 0.8rem;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/*responsive mobile*/
+@media (max-width: 768px) {
+  .point .text {
+    left: -100px;
     width: 200px;
-    padding: 20px;
-    border-radius: 4px;
-    background: #00000077;
-    border: 1px solid #ffffff77;
-    color: #ffffff;
-    line-height: 1.3em;
-    font-family: Helvetica, Arial, sans-serif;
-    font-weight: 100;
-    font-size: 14px;
-    opacity: 0;
-    transition: opacity 0.3s;
-    pointer-events: none;
-}
-
-.point:hover .text
-{
-    opacity: 1;
-}
-
-.point.visible .label
-{
-    transform: scale(1, 1);
-}
-
-.loading-bar
-{
-    position: absolute;
-    top: 50%;
-    width: 100%;
-    height: 2px;
-    background: #ffffff;
-    transform: scaleX(0);
-    transform-origin: top left;
-    transition: transform 0.5s;
-    z-index: 2;
-    pointer-events: none;
-}
-
-.loading-bar.ended
-{
-    transform: scaleX(0);
-    transform-origin: 100% 0;
-    transition: transform 1s ease-in-out;
-}
-
-.percentage{
-    position: absolute;
-    display: flex;
-    justify-content: center;
-    font-family: Arial, Helvetica, sans-serif;
-    top: 47%;
-    width: 100%;
-    height: 2px;
-    color: white;
-    font-size: 1rem;
-    pointer-events: none;
-}
-
-.percentage.ended{
-    opacity: 0;
-    transition: opacity .5s ease-in-out;
-}
-
-.loading-background{
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #000000;
-    pointer-events: none;
-}
-
-.loading-background.ended{
-    opacity: 0;
-    transition: opacity 3.5s ease-in-out;
-}
-
-.author{
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    color: white;
-    font-family: monospace;
-    font-size: 0.8rem;
-    pointer-events: none;
-    z-index: 2;
+  }
 }

@@ -4,7 +4,6 @@ import { gsap } from "gsap";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
-import { color, log } from "three/examples/jsm/nodes/Nodes.js";
 
 /**
  * Base
@@ -12,8 +11,9 @@ import { color, log } from "three/examples/jsm/nodes/Nodes.js";
 // Debug
 const gui = new GUI({
   width: 400,
+  title: "Debug Panel",
+  closeFolders: true,
 });
-
 gui.close();
 gui.hide();
 
@@ -31,7 +31,6 @@ let sceneReady = false;
 const loadingManager = new THREE.LoadingManager(
   // Loaded
   () => {
-    // ...
     window.setTimeout(() => {
       loadingBarBackground.classList.add("ended");
       loadingBarBackground.style.transform = "";
@@ -59,8 +58,13 @@ const loadingManager = new THREE.LoadingManager(
 // Canvas
 const canvas = document.querySelector("canvas.webgl");
 
+
 // Scene
 const scene = new THREE.Scene();
+
+//light 1
+const light1 = new THREE.AmbientLight(0xffffff, 1);
+scene.add(light1);
 
 /**
  * Loaders
@@ -79,18 +83,20 @@ gltfLoader.setDRACOLoader(dracoLoader);
 /**
  * Textures
  */
-const bakedTexture1 = textureLoader.load("/textures/baked11.jpg");
+const bakedTexture1 = textureLoader.load("/textures/baked12.jpg");
 bakedTexture1.flipY = false;
 bakedTexture1.colorSpace = THREE.SRGBColorSpace;
 
 const globeTexture = textureLoader.load("/textures/sunTexture2.png");
-const saturnTexture = textureLoader.load("/textures/Saturn.jpeg");
+const saturnTexture = textureLoader.load("/textures/Saturn2.jpeg");
+
 const video = document.createElement("video");
 
-video.src = "/textures/video3.mp4";
+video.src = "/textures/video.mp4";
 video.crossOrigin = "anonymous";
 video.loop = true;
 video.muted = true;
+
 video.play();
 
 const screen = new THREE.VideoTexture(video);
@@ -98,24 +104,17 @@ screen.minFilter = THREE.LinearFilter;
 screen.magFilter = THREE.LinearFilter;
 screen.format = THREE.RGBFormat;
 
-// Rotate the video texture by 90 degrees (PI/2 radians)
-// The setUvTransform method can be used to adjust the UV transformation
-// Here we scale the U and V axes by 1 (no scaling), and then rotate by 90 degrees
-screen.center.set(0.5, 0.5); // Set the rotation center to the middle of the texture
-//size of the video
-screen.rotation = Math.PI /-2 // Rotate 90 degrees
-
-//move to the left
-screen.offset.set(0.1, 0.1);
-//move to the bottom
-screen.repeat.set(0.6, 0.6);
-
-//move to the right
-
+screen.center.set(0.5, 0.5);
+screen.rotation = Math.PI / -2;
+//move the video texturre to the bottom a bit
+screen.offset.set(0.1, 0.3);
+//make the video texture smaller
+screen.repeat.set(0.9, 0.9);
 // Apply the video texture to the screen material
 const screenMaterial = new THREE.MeshBasicMaterial({
   map: screen,
 });
+
 // Emissions
 const halfmoonMaterial = new THREE.MeshBasicMaterial({
   color: 0xffffff,
@@ -125,7 +124,7 @@ const halfmoonMaterial = new THREE.MeshBasicMaterial({
 });
 
 const lampMaterial = new THREE.MeshBasicMaterial({
-  color: 0xff9d53,
+  color: 0xFFDDA1,
 });
 
 const ledlightoffMaterial = new THREE.MeshBasicMaterial({
@@ -136,22 +135,22 @@ const ledlightoffMaterial = new THREE.MeshBasicMaterial({
 });
 
 const ledlightEmission = new THREE.MeshBasicMaterial({
-  color: 0x1f51ff,
-  emissive: 0x1f51ff,
+  color: 0xADB0E7,
+  emissive: 0xADB0E7,
   emissiveIntensity: 20, // Adjust the intensity as needed
   toneMapped: false,
 });
 
 const circle = new THREE.MeshBasicMaterial({
-  emissive: 0x7041e7,
-  color: 0x7041e7,
+  emissive: 0xC083E7,
+  color: 0xC083E7,
   emissiveIntensity: 40, // Adjust the intensity as needed
 });
 
 const windowTardis = new THREE.MeshStandardMaterial({
   color: 0x94969c, // Adjust the color as needed
-  roughness: 0.75, // Adjust roughness property
-  // You can add more properties like emissive if needed
+  emissive: 0x94969c,
+  emissiveIntensity: 50, // Adjust the intensity as needed
 });
 
 /**
@@ -163,7 +162,8 @@ const material1 = new THREE.MeshBasicMaterial({
   map: bakedTexture1,
 });
 
-gltfLoader.load("/models/bedroom22.glb", (gltf) => {
+let mixer;
+gltfLoader.load("/models/bedroom25.glb", (gltf) => {
   // Traverse the scene
   gltf.scene.traverse((child) => {
     console.log(child);
@@ -188,6 +188,7 @@ gltfLoader.load("/models/bedroom22.glb", (gltf) => {
 
     if (child.isMesh && child.name === "screen") {
       child.material = screenMaterial;
+      // Rotate the screen by 90 degrees around the x-axis
     }
 
     if (child.isMesh && child.name === "halfmoon") {
@@ -228,22 +229,106 @@ gltfLoader.load("/models/bedroom22.glb", (gltf) => {
     if (child.isMesh && child.name === "Cylinder026") {
       child.material = lampMaterial;
     }
-
-    // Animation from blender the model is Cube008
-    const model = gltf.scene;
-
-    const animations = gltf.animations;
-
-    if (animations && animations.length > 0) {
-      const mixer = new THREE.AnimationMixer(model);
-      animations.forEach((clip) => {
-        console.log("clippppsssnn", clip);
-        mixer.clipAction(clip).play();
-      });
-    }
   });
+
+  // Initialize mixer and play animations
+  if (gltf.animations && gltf.animations.length > 0) {
+    mixer = new THREE.AnimationMixer(gltf.scene);
+    gltf.animations.forEach((clip) => {
+      mixer.clipAction(clip).play();
+    });
+  } else {
+    console.log("No animations found in the gltf file.");
+  }
+
   scene.add(gltf.scene);
 });
+
+/* Lights*/
+const ambientLight = new THREE.AmbientLight(0xffffff, 2);
+scene.add(ambientLight);
+//light 1
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+directionalLight.position.set(9, 10, 4);
+scene.add(directionalLight);
+
+const directionalLightHelper = new THREE.DirectionalLightHelper(
+  directionalLight,
+  0.2
+);
+scene.add(directionalLightHelper);
+directionalLightHelper.visible = false;
+
+const directionalLight2 = new THREE.DirectionalLight(0x1f51ff, 2);
+directionalLight2.position.set(1, 4, 3);
+scene.add(directionalLight2);
+
+const directionalLightHelper2 = new THREE.DirectionalLightHelper(
+  directionalLight2,
+  0.2
+);
+scene.add(directionalLightHelper2);
+directionalLightHelper2.visible = false;
+
+//lightshelper in gui  and group lights
+const lightsFolder = gui.addFolder("Lights");
+lightsFolder.open();
+lightsFolder
+  .add(directionalLight, "intensity")
+  .min(0)
+  .max(10)
+  .step(0.001)
+  .name("Light 1 Intensity");
+lightsFolder
+  .add(directionalLight.position, "x")
+  .min(-10)
+  .max(10)
+  .step(0.001)
+  .name("Light 1 X");
+lightsFolder
+  .add(directionalLight.position, "y")
+  .min(-10)
+  .max(10)
+  .step(0.001)
+  .name("Light 1 Y");
+lightsFolder
+  .add(directionalLight.position, "z")
+  .min(-10)
+  .max(10)
+  .step(0.001)
+  .name("Light 1 Z");
+lightsFolder.add(directionalLight, "visible").name("Light 1 Visible");
+lightsFolder
+  .add(directionalLightHelper, "visible")
+  .name("Light 1 Helper Visible");
+lightsFolder
+  .add(directionalLight2, "intensity")
+  .min(0)
+  .max(10)
+  .step(0.001)
+  .name("Light 2 Intensity");
+lightsFolder
+  .add(directionalLight2.position, "x")
+  .min(-10)
+  .max(10)
+  .step(0.001)
+  .name("Light 2 X");
+lightsFolder
+  .add(directionalLight2.position, "y")
+  .min(-10)
+  .max(10)
+  .step(0.001)
+  .name("Light 2 Y");
+lightsFolder
+  .add(directionalLight2.position, "z")
+  .min(-10)
+  .max(10)
+  .step(0.001)
+  .name("Light 2 Z");
+lightsFolder.add(directionalLight2, "visible").name("Light 2 Visible");
+lightsFolder
+  .add(directionalLightHelper2, "visible")
+  .name("Light 2 Helper Visible");
 
 /**
  * POI
@@ -251,15 +336,15 @@ gltfLoader.load("/models/bedroom22.glb", (gltf) => {
 
 const points = [
   {
-    position: new THREE.Vector3(2, 2, 2),
+    position: new THREE.Vector3(4, 7, -5),
     element: document.querySelector(".point-0"),
   },
   {
-    position: new THREE.Vector3(2, 2, 2),
+    position: new THREE.Vector3(6, 4, 6),
     element: document.querySelector(".point-1"),
   },
   {
-    position: new THREE.Vector3(2, 2, 2),
+    position: new THREE.Vector3(6.5, 3, -2),
     element: document.querySelector(".point-2"),
   },
 ];
@@ -305,19 +390,49 @@ window.addEventListener("resize", () => {
  */
 // Base camera
 const camera = new THREE.PerspectiveCamera(
-  45,
+  45, //45
   sizes.width / sizes.height,
   0.1,
   100
 );
-camera.position.x = 4;
-camera.position.y = 5;
-camera.position.z = 4;
+
+const camPosition = 18;
+const camLookAt = new THREE.Vector3(0, 3, 0);
+camera.position.set(camPosition, camPosition + 3, camPosition);
+camera.lookAt(camLookAt);
 scene.add(camera);
 
-// Controls
+//camera in gui
+const cameraFolder = gui.addFolder("Camera");
+cameraFolder.open();
+cameraFolder
+  .add(camera.position, "x")
+  .min(-50)
+  .max(50)
+  .step(0.001)
+  .name("Camera X");
+cameraFolder
+  .add(camera.position, "y")
+  .min(-50)
+  .max(50)
+  .step(0.001)
+  .name("Camera Y");
+cameraFolder
+  .add(camera.position, "z")
+  .min(-50)
+  .max(50)
+  .step(0.001)
+  .name("Camera Z");
+//camera look at
+
+/**
+ * Orbit Controls
+ */
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
+controls.maxPolarAngle = Math.PI / 2;
+controls.minDistance = 10;
+controls.maxDistance = 1000;
 
 /**
  * Renderer
@@ -336,12 +451,11 @@ const raycaster = new THREE.Raycaster();
 
 const clock = new THREE.Clock();
 const tick = () => {
-  const elapsedTime = clock.getElapsedTime();
+  const deltaTime = clock.getDelta();
 
-  //animation moon
-  const moon = scene.getObjectByName("moon");
-  if (moon) {
-    moon.rotation.y = elapsedTime * 0.3;
+  // Update mixer
+  if (mixer) {
+    mixer.update(deltaTime);
   }
 
   // Update controls

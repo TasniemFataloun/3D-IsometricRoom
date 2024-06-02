@@ -58,7 +58,6 @@ const loadingManager = new THREE.LoadingManager(
 // Canvas
 const canvas = document.querySelector("canvas.webgl");
 
-
 // Scene
 const scene = new THREE.Scene();
 
@@ -106,11 +105,8 @@ screen.format = THREE.RGBFormat;
 
 screen.center.set(0.5, 0.5);
 screen.rotation = Math.PI / -2;
-//move the video texturre to the bottom a bit
 screen.offset.set(0.1, 0.3);
-//make the video texture smaller
 screen.repeat.set(0.9, 0.9);
-// Apply the video texture to the screen material
 const screenMaterial = new THREE.MeshBasicMaterial({
   map: screen,
 });
@@ -124,7 +120,7 @@ const halfmoonMaterial = new THREE.MeshBasicMaterial({
 });
 
 const lampMaterial = new THREE.MeshBasicMaterial({
-  color: 0xFFDDA1,
+  color: 0xffdda1,
 });
 
 const ledlightoffMaterial = new THREE.MeshBasicMaterial({
@@ -135,15 +131,15 @@ const ledlightoffMaterial = new THREE.MeshBasicMaterial({
 });
 
 const ledlightEmission = new THREE.MeshBasicMaterial({
-  color: 0xADB0E7,
-  emissive: 0xADB0E7,
+  color: 0xadb0e7,
+  emissive: 0xadb0e7,
   emissiveIntensity: 20, // Adjust the intensity as needed
   toneMapped: false,
 });
 
 const circle = new THREE.MeshBasicMaterial({
-  emissive: 0xC083E7,
-  color: 0xC083E7,
+  emissive: 0xc083e7,
+  color: 0xc083e7,
   emissiveIntensity: 40, // Adjust the intensity as needed
 });
 
@@ -163,11 +159,10 @@ const material1 = new THREE.MeshBasicMaterial({
 });
 
 let mixer;
+let animations;
 gltfLoader.load("/models/bedroom25.glb", (gltf) => {
   // Traverse the scene
   gltf.scene.traverse((child) => {
-    console.log(child);
-
     // Apply material1 to all meshes
     if (child.isMesh) {
       child.material = material1;
@@ -195,8 +190,6 @@ gltfLoader.load("/models/bedroom25.glb", (gltf) => {
       child.material = halfmoonMaterial;
     }
 
-    console.log(child.name);
-
     if (child.isMesh && child.name === "ledLightLeft") {
       child.material = ledlightEmission;
     }
@@ -209,7 +202,6 @@ gltfLoader.load("/models/bedroom25.glb", (gltf) => {
       child.material = ledlightoffMaterial;
     }
     if (child.isGroup && child.name === "tardiswindows") {
-      console.log("Found tardiswindows Group!"); // Log if "tardiswindows" Group is found
       // Traverse the children of the "tardiswindows" Group
       child.traverse((meshChild) => {
         if (meshChild.isMesh) {
@@ -231,104 +223,75 @@ gltfLoader.load("/models/bedroom25.glb", (gltf) => {
     }
   });
 
-  // Initialize mixer and play animations
   if (gltf.animations && gltf.animations.length > 0) {
     mixer = new THREE.AnimationMixer(gltf.scene);
     gltf.animations.forEach((clip) => {
       mixer.clipAction(clip).play();
     });
+    animations = gui.addFolder("Animations");
+
+    // Pause animation
+    animations
+      .add(
+        {
+          pause: () => {
+            if (mixer) {
+              mixer.timeScale = 0; 
+            }
+          },
+        },
+        "pause"
+      )
+      .name("Pause animations");
+    // Resume animation
+    animations
+      .add(
+        {
+          resume: () => {
+            if (mixer) {
+              mixer.timeScale = 1; 
+            }
+          },
+        },
+        "resume"
+      )
+      .name("Resume animations");
+
+    // Restart animation
+    animations
+      .add(
+        {
+          restart: () => {
+            if (mixer) {
+              mixer.setTime(0);
+              mixer.update(0);
+              mixer.play();
+            }
+          },
+        },
+        "restart"
+      )
+      .name("Restart animations");
+
+    // Stop animation (remove from scene)
+    animations
+      .add(
+        {
+          stop: () => {
+            if (mixer) {
+              mixer.stopAllAction();
+            }
+          },
+        },
+        "stop"
+      )
+      .name("Remove animations");
   } else {
     console.log("No animations found in the gltf file.");
   }
 
   scene.add(gltf.scene);
 });
-
-/* Lights*/
-const ambientLight = new THREE.AmbientLight(0xffffff, 2);
-scene.add(ambientLight);
-//light 1
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-directionalLight.position.set(9, 10, 4);
-scene.add(directionalLight);
-
-const directionalLightHelper = new THREE.DirectionalLightHelper(
-  directionalLight,
-  0.2
-);
-scene.add(directionalLightHelper);
-directionalLightHelper.visible = false;
-
-const directionalLight2 = new THREE.DirectionalLight(0x1f51ff, 2);
-directionalLight2.position.set(1, 4, 3);
-scene.add(directionalLight2);
-
-const directionalLightHelper2 = new THREE.DirectionalLightHelper(
-  directionalLight2,
-  0.2
-);
-scene.add(directionalLightHelper2);
-directionalLightHelper2.visible = false;
-
-//lightshelper in gui  and group lights
-const lightsFolder = gui.addFolder("Lights");
-lightsFolder.open();
-lightsFolder
-  .add(directionalLight, "intensity")
-  .min(0)
-  .max(10)
-  .step(0.001)
-  .name("Light 1 Intensity");
-lightsFolder
-  .add(directionalLight.position, "x")
-  .min(-10)
-  .max(10)
-  .step(0.001)
-  .name("Light 1 X");
-lightsFolder
-  .add(directionalLight.position, "y")
-  .min(-10)
-  .max(10)
-  .step(0.001)
-  .name("Light 1 Y");
-lightsFolder
-  .add(directionalLight.position, "z")
-  .min(-10)
-  .max(10)
-  .step(0.001)
-  .name("Light 1 Z");
-lightsFolder.add(directionalLight, "visible").name("Light 1 Visible");
-lightsFolder
-  .add(directionalLightHelper, "visible")
-  .name("Light 1 Helper Visible");
-lightsFolder
-  .add(directionalLight2, "intensity")
-  .min(0)
-  .max(10)
-  .step(0.001)
-  .name("Light 2 Intensity");
-lightsFolder
-  .add(directionalLight2.position, "x")
-  .min(-10)
-  .max(10)
-  .step(0.001)
-  .name("Light 2 X");
-lightsFolder
-  .add(directionalLight2.position, "y")
-  .min(-10)
-  .max(10)
-  .step(0.001)
-  .name("Light 2 Y");
-lightsFolder
-  .add(directionalLight2.position, "z")
-  .min(-10)
-  .max(10)
-  .step(0.001)
-  .name("Light 2 Z");
-lightsFolder.add(directionalLight2, "visible").name("Light 2 Visible");
-lightsFolder
-  .add(directionalLightHelper2, "visible")
-  .name("Light 2 Helper Visible");
 
 /**
  * POI
@@ -423,6 +386,7 @@ cameraFolder
   .max(50)
   .step(0.001)
   .name("Camera Z");
+
 //camera look at
 
 /**
@@ -491,7 +455,6 @@ const tick = () => {
   // Render
   renderer.render(scene, camera);
 
-  // Call tick again on the next frame
   window.requestAnimationFrame(tick);
 };
 

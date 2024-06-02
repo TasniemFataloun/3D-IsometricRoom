@@ -1,4 +1,3 @@
 # Isometric Room
 
-
-vercel: https://3-d-isometric-room.vercel.app/#debug
+vercel: https://3-d-isometric-room.vercel.app/
